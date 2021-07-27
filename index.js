@@ -117,6 +117,32 @@ async function checkEventSheetExists(sheetName) {
     return null;
 }
 
+async function updateOverview() {
+        const spreadsheet = await getSpreadSheet(process.env.GOOGLE_SPREADSHEET_ID);
+
+        try {
+            const new_sheet = await spreadsheet.addSheet({ title: "Overview" });
+
+            await new_sheet.updateProperties({ index: 0 });
+
+            await new_sheet.loadCells(range_of_cells_to_load); // TODO this may need tweaking WARNING!
+
+            if(showLogging)
+                console.log(`Created new sheet: ${sheetName}.`);
+
+            return new_sheet;
+        } catch (e) {
+            console.error(e);
+            console.log(`Failed to create new sheet: ${sheetName}.`);
+        }
+    } catch (e) {
+        console.error(e);
+        console.log("Failed to get Google Sheet.");
+    }
+
+    return null;
+
+}
 async function createEventSheet(sheetName, showLogging) {
     try {
         const spreadsheet = await getSpreadSheet(process.env.GOOGLE_SPREADSHEET_ID);
@@ -158,7 +184,6 @@ async function updateEventSheet(event_sheet, sign_up_order, raid_helper_reaction
     
     for (let sign_up in sign_up_order) {
         if (event_sheet != null) {
-            // console.log(`sign_up: ${sign_up}`);
            
             const currElement = sign_up_order[sign_up];
             const order_cell = event_sheet.getCell(sign_up, 0);
@@ -593,8 +618,6 @@ function getEventData(event_message, raid_helper_reactions, showLogging) {
     if(showLogging) {
         // console.log("Sign up data:");
         // console.log(role_sign_up_data);
-        console.log("Sign up order:");
-        console.log(sign_up_order);
     }
     return {role_sign_up_data, sign_up_order};
 }
@@ -611,7 +634,6 @@ async function getEventReactions(event_message) {
         for (let user in users) {
             if (users[user].bot) {
                 raid_helper_reactions.push(reactions[reaction].emoji.name)
-                console.log(`Role: ${reactions[reaction].emoji.name}, username: ${users[user].username}`);
                 break;
             }
         }
@@ -687,7 +709,7 @@ async function extractInfoAndUpdateSheet(guildID, showLogging) {
 
                 const event_title = getEventTitle(event_message, showLogging);
                 //console.log("Raw Event Message");
-                console.log(event_message);
+                //console.log(event_message);
                 const date_text = getEventDate(event_message, showLogging);
 
                 const sheet_name = date_text + ` | ` + event_title;
